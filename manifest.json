@@ -1,0 +1,17 @@
+{
+  "name": "Ljudinspelare",
+  "short_name": "Inspelare",
+  "description": "En enkel app för att spela in ljud",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#ef4444",
+  "icons": [
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2VmNDQ0NCI+PHBhdGggZD0iTTEyIDE0YzEuNjYgMCAzLTEuMzQgMy0zVjVjMC0xLjY2LTEuMzQtMy0zLTNTOSAzLjM0IDkgNXY2YzAgMS42NiAxLjM0IDMgMyAzem01LTNjMCAyLjc2LTIuMjQgNS01IDVzLTUtMi4yNC01LTVINWMwIDMuNTMgMi42MSA2LjQzIDYgNi45MlYyMWgydi0zLjA4YzMuMzktLjQ5IDYtMy4zOSA2LTYuOTJoLTJ6Ii8+PC9zdmc+",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

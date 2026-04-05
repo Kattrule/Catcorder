@@ -10,10 +10,11 @@
             --bg-color: #0f172a;
             --card-bg: #1e293b;
             --text-color: #ffffff;
-            --accent: #ef4444; /* Röd för inspelning */
+            --accent: #ef4444; 
             --accent-hover: #dc2626;
             --text-muted: #94a3b8;
             --success: #10b981;
+            --warning: #f59e0b;
         }
 
         * { color: var(--text-color); font-family: Arial, sans-serif; box-sizing: border-box; }
@@ -24,28 +25,14 @@
         h1 { margin-top: 0; font-size: 1.8rem; }
         p { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 30px; }
 
-        /* Inspelningsknapp */
         .record-btn {
-            background: var(--accent);
-            border: none;
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            cursor: pointer;
-            box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
-            transition: all 0.3s ease;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            background: var(--accent); border: none; width: 80px; height: 80px;
+            border-radius: 50%; cursor: pointer; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+            transition: all 0.3s ease; display: flex; justify-content: center; align-items: center;
             margin: 0 auto 20px auto;
         }
-        
         .record-btn:active { transform: scale(0.9); }
-        
-        .record-btn.recording {
-            animation: pulse 1.5s infinite;
-            border-radius: 20%; /* Blir fyrkantig när den spelar in (stop-symbol) */
-        }
+        .record-btn.recording { animation: pulse 1.5s infinite; border-radius: 20%; }
 
         @keyframes pulse {
             0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
@@ -53,30 +40,28 @@
             100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
         }
 
-        .status { font-weight: bold; margin-bottom: 20px; height: 20px; }
+        .status { font-weight: bold; margin-bottom: 20px; min-height: 20px; }
 
-        /* Ljudspelare */
-        audio { width: 100%; margin-top: 20px; outline: none; border-radius: 30px; }
+        audio { width: 100%; margin-top: 15px; outline: none; border-radius: 30px; }
         
-        /* Nedladdningsknapp */
-        .download-btn {
-            display: none;
-            background: var(--success);
-            color: white;
-            text-decoration: none;
-            padding: 12px 20px;
-            border-radius: 10px;
-            font-weight: bold;
-            margin-top: 20px;
-            width: 100%;
+        .btn {
+            display: none; color: white; text-decoration: none; padding: 12px 20px;
+            border-radius: 10px; font-weight: bold; margin-top: 10px; width: 100%; cursor: pointer;
+            border: none;
         }
+        .btn-success { background: var(--success); }
+        .btn-warning { background: var(--warning); display: none; }
+
+        .section-title { font-size: 0.9rem; color: var(--text-muted); margin-top: 20px; text-align: left; display: none; }
+        hr { border: 0; height: 1px; background: rgba(255,255,255,0.1); margin: 20px 0; display: none; }
+
     </style>
 </head>
 <body>
 
 <div class="app-container">
     <h1>Ljudinspelare</h1>
-    <p>Spela in röstanteckningar direkt i webbläsaren.</p>
+    <p>Spela in och lek med röstanteckningar.</p>
 
     <button id="recordBtn" class="record-btn">
         <svg width="30" height="30" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
@@ -86,22 +71,39 @@
 
     <div id="status" class="status">Tryck för att starta</div>
 
+    <div id="originalTitle" class="section-title">Originalinspelning:</div>
     <audio id="audioPlayer" controls style="display: none;"></audio>
-    <a id="downloadLink" class="download-btn" href="#">Ladda ner inspelning</a>
+    <a id="downloadLink" class="btn btn-success" href="#">Ladda ner original</a>
+
+    <hr id="divider">
+
+    <button id="reverseBtn" class="btn btn-warning" onclick="processReverseAudio()">Vänd ljudet baklänges 🔄</button>
+
+    <div id="reversedTitle" class="section-title">Baklänges:</div>
+    <audio id="reversedPlayer" controls style="display: none;"></audio>
+    <a id="downloadReversed" class="btn btn-success" href="#">Ladda ner baklänges</a>
 </div>
 
 <script>
     let mediaRecorder;
     let audioChunks = [];
     let isRecording = false;
+    let currentAudioBlob = null; 
 
     const recordBtn = document.getElementById('recordBtn');
     const statusText = document.getElementById('status');
     const audioPlayer = document.getElementById('audioPlayer');
     const downloadLink = document.getElementById('downloadLink');
     const btnIcon = document.getElementById('btnIcon');
+    const reverseBtn = document.getElementById('reverseBtn');
+    const reversedPlayer = document.getElementById('reversedPlayer');
+    const downloadReversed = document.getElementById('downloadReversed');
+    
+    // UI Element för att visa/dölja
+    const originalTitle = document.getElementById('originalTitle');
+    const reversedTitle = document.getElementById('reversedTitle');
+    const divider = document.getElementById('divider');
 
-    // Kolla om webbläsaren stöder ljudinspelning
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         statusText.innerText = "Din webbläsare stöder inte ljudinspelning.";
         statusText.style.color = "var(--accent)";
@@ -118,7 +120,6 @@
 
     async function startRecording() {
         try {
-            // Be om tillåtelse att använda mikrofonen
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             mediaRecorder = new MediaRecorder(stream);
             
@@ -126,35 +127,43 @@
             isRecording = true;
             audioChunks = [];
 
-            // UI-uppdateringar
+            // UI
             recordBtn.classList.add('recording');
             statusText.innerText = "Spelar in... (tryck igen för att stoppa)";
             statusText.style.color = "var(--accent)";
-            audioPlayer.style.display = "none";
-            downloadLink.style.display = "none";
-            // Byt ikon till en stopp-fyrkant
             btnIcon.setAttribute('d', 'M6 6h12v12H6z');
 
-            // Spara datan allt eftersom den kommer in
+            // Göm gamla spelare vid ny inspelning
+            audioPlayer.style.display = "none";
+            downloadLink.style.display = "none";
+            reverseBtn.style.display = "none";
+            reversedPlayer.style.display = "none";
+            downloadReversed.style.display = "none";
+            originalTitle.style.display = "none";
+            reversedTitle.style.display = "none";
+            divider.style.display = "none";
+
             mediaRecorder.addEventListener("dataavailable", event => {
                 audioChunks.push(event.data);
             });
 
-            // Vad som händer när vi stoppar
             mediaRecorder.addEventListener("stop", () => {
-                const audioBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType });
-                const audioUrl = URL.createObjectURL(audioBlob);
+                currentAudioBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType });
+                const audioUrl = URL.createObjectURL(currentAudioBlob);
                 
                 audioPlayer.src = audioUrl;
                 audioPlayer.style.display = "block";
                 
-                // Ställ in nedladdningslänken. Filändelsen beror på enhet (.webm eller .mp4)
                 const extension = mediaRecorder.mimeType.includes("mp4") ? "mp4" : "webm";
                 downloadLink.href = audioUrl;
                 downloadLink.download = `inspelning-${new Date().getTime()}.${extension}`;
-                downloadLink.style.display = "inline-block";
+                
+                // Visa knappar
+                downloadLink.style.display = "block";
+                reverseBtn.style.display = "block";
+                originalTitle.style.display = "block";
+                divider.style.display = "block";
 
-                // Stäng av mikrofonen helt så den inte drar batteri
                 stream.getTracks().forEach(track => track.stop());
             });
 
@@ -169,21 +178,104 @@
         if (mediaRecorder && mediaRecorder.state !== "inactive") {
             mediaRecorder.stop();
             isRecording = false;
-            
-            // UI-uppdateringar
             recordBtn.classList.remove('recording');
             statusText.innerText = "Inspelning sparad!";
             statusText.style.color = "var(--success)";
-            // Byt ikon tillbaka till mikrofon
             btnIcon.setAttribute('d', 'M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5-3c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z');
         }
     }
 
-    // Registrera Service Worker för PWA
+    // --- BAKLÄNGESFUNKTIONEN --- //
+    async function processReverseAudio() {
+        if (!currentAudioBlob) return;
+        
+        reverseBtn.innerText = "Bearbetar ljudet... ⏳";
+        reverseBtn.disabled = true;
+
+        try {
+            // Skapa en AudioContext för att bearbeta ljudet
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const arrayBuffer = await currentAudioBlob.arrayBuffer();
+            const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+
+            // Vänd ljudet baklänges (reversera datan i alla kanaler)
+            for (let i = 0; i < audioBuffer.numberOfChannels; i++) {
+                Array.prototype.reverse.call(audioBuffer.getChannelData(i));
+            }
+
+            // Bygg om ljudet till en .wav-fil för nedladdning
+            const wavBlob = audioBufferToWavBlob(audioBuffer);
+            const reversedUrl = URL.createObjectURL(wavBlob);
+
+            // Uppdatera gränssnittet
+            reversedPlayer.src = reversedUrl;
+            reversedPlayer.style.display = "block";
+            
+            downloadReversed.href = reversedUrl;
+            downloadReversed.download = `baklanges-${new Date().getTime()}.wav`;
+            downloadReversed.style.display = "block";
+            reversedTitle.style.display = "block";
+
+            reverseBtn.style.display = "none"; // Göm knappen när det är klart
+
+        } catch (e) {
+            console.error(e);
+            reverseBtn.innerText = "Ett fel uppstod!";
+        } finally {
+            reverseBtn.disabled = false;
+        }
+    }
+
+    // Hjälpfunktion för att konvertera raw audio data till en .wav fil
+    function audioBufferToWavBlob(buffer) {
+        const numOfChan = buffer.numberOfChannels,
+            length = buffer.length * numOfChan * 2 + 44,
+            bufferData = new ArrayBuffer(length),
+            view = new DataView(bufferData),
+            channels = [],
+            sampleRate = buffer.sampleRate;
+        let offset = 0,
+            pos = 0;
+
+        function setUint16(data) { view.setUint16(offset, data, true); offset += 2; }
+        function setUint32(data) { view.setUint32(offset, data, true); offset += 4; }
+
+        setUint32(0x46464952); // "RIFF"
+        setUint32(length - 8); 
+        setUint32(0x45564157); // "WAVE"
+
+        setUint32(0x20746d66); // "fmt " chunk
+        setUint32(16); 
+        setUint16(1); 
+        setUint16(numOfChan);
+        setUint32(sampleRate);
+        setUint32(sampleRate * 2 * numOfChan); 
+        setUint16(numOfChan * 2); 
+        setUint16(16); 
+
+        setUint32(0x61746164); // "data" chunk
+        setUint32(length - pos - 4); 
+
+        for(let i = 0; i < buffer.numberOfChannels; i++) {
+            channels.push(buffer.getChannelData(i));
+        }
+
+        while(pos < buffer.length) {
+            for(let i = 0; i < numOfChan; i++) {
+                let sample = Math.max(-1, Math.min(1, channels[i][pos]));
+                sample = (0.5 + sample < 0 ? sample * 32768 : sample * 32767)|0;
+                view.setInt16(offset, sample, true);
+                offset += 2;
+            }
+            pos++;
+        }
+
+        return new Blob([bufferData], { type: "audio/wav" });
+    }
+
+    // PWA Service Worker
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js')
-            .then(() => console.log("Service Worker registrerad"))
-            .catch(err => console.log("SW fel:", err));
+        navigator.serviceWorker.register('sw.js').catch(err => console.log(err));
     }
 </script>
 </body>

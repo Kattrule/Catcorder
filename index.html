@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ljudinspelare</title>
+    <title>Pro Ljudinspelare</title>
     <link rel="manifest" href="manifest.json">
     <style>
         :root {
@@ -11,67 +11,72 @@
             --card-bg: #1e293b;
             --text-color: #ffffff;
             --accent: #ef4444; 
-            --accent-hover: #dc2626;
             --text-muted: #94a3b8;
             --success: #10b981;
             --warning: #f59e0b;
+            --info: #38bdf8;
         }
 
-        * { color: var(--text-color); font-family: Arial, sans-serif; box-sizing: border-box; }
+        * { color: var(--text-color); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; box-sizing: border-box; }
         body, html { margin: 0; padding: 0; min-height: 100%; background: var(--bg-color); display: flex; justify-content: center; align-items: center; }
         
-        .app-container { background: var(--card-bg); width: 100%; max-width: 400px; padding: 30px; border-radius: 20px; text-align: center; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5); margin: 20px; }
+        .app-container { background: var(--card-bg); width: 100%; max-width: 450px; padding: 30px; border-radius: 24px; text-align: center; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6); margin: 20px; border: 1px solid rgba(255,255,255,0.05); }
         
-        h1 { margin-top: 0; font-size: 1.8rem; }
-        p { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 30px; }
+        h1 { margin-top: 0; font-size: 1.8rem; letter-spacing: -0.5px; }
+        .subtitle { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 25px; display: block; }
 
         .record-btn {
-            background: var(--accent); border: none; width: 80px; height: 80px;
-            border-radius: 50%; cursor: pointer; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
-            transition: all 0.3s ease; display: flex; justify-content: center; align-items: center;
-            margin: 0 auto 20px auto;
+            background: var(--accent); border: none; width: 90px; height: 90px;
+            border-radius: 50%; cursor: pointer; box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); display: flex; justify-content: center; align-items: center;
+            margin: 0 auto 20px auto; outline: none;
         }
         .record-btn:active { transform: scale(0.9); }
-        .record-btn.recording { animation: pulse 1.5s infinite; border-radius: 20%; }
+        .record-btn.recording { animation: pulse 1.5s infinite; border-radius: 25%; background: #000; }
 
         @keyframes pulse {
             0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
-            70% { box-shadow: 0 0 0 20px rgba(239, 68, 68, 0); }
+            70% { box-shadow: 0 0 0 25px rgba(239, 68, 68, 0); }
             100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
         }
 
-        .status { font-weight: bold; margin-bottom: 20px; min-height: 20px; }
+        .status { font-weight: 600; margin-bottom: 20px; min-height: 24px; font-size: 0.95rem; }
 
-        audio { width: 100%; margin-top: 15px; outline: none; border-radius: 30px; }
+        .quality-badge { background: rgba(56, 189, 248, 0.2); color: var(--info); padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; margin-bottom: 15px; display: inline-block; }
+
+        audio { width: 100%; margin-top: 15px; outline: none; border-radius: 12px; height: 45px; }
         
         .btn {
-            display: none; color: white; text-decoration: none; padding: 12px 20px;
-            border-radius: 10px; font-weight: bold; margin-top: 10px; width: 100%; cursor: pointer;
-            border: none;
+            display: none; color: white; text-decoration: none; padding: 14px 20px;
+            border-radius: 12px; font-weight: bold; margin-top: 12px; width: 100%; cursor: pointer;
+            border: none; transition: background 0.2s; font-size: 1rem;
         }
         .btn-success { background: var(--success); }
+        .btn-success:hover { background: #059669; }
         .btn-warning { background: var(--warning); display: none; }
+        .btn-warning:hover { background: #d97706; }
 
-        .section-title { font-size: 0.9rem; color: var(--text-muted); margin-top: 20px; text-align: left; display: none; }
-        hr { border: 0; height: 1px; background: rgba(255,255,255,0.1); margin: 20px 0; display: none; }
+        .section-title { font-size: 0.85rem; color: var(--text-muted); margin-top: 25px; text-align: left; display: none; text-transform: uppercase; letter-spacing: 1px; }
+        hr { border: 0; height: 1px; background: rgba(255,255,255,0.1); margin: 25px 0; display: none; }
 
     </style>
 </head>
 <body>
 
 <div class="app-container">
+    <div class="quality-badge">Studio Quality (256kbps)</div>
     <h1>Ljudinspelare</h1>
-    <p>Spela in och lek med röstanteckningar.</p>
+    <span class="subtitle">Högkvalitativ inspelning & effekter</span>
 
     <button id="recordBtn" class="record-btn">
-        <svg width="30" height="30" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
             <path id="btnIcon" d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5-3c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
         </svg>
     </button>
 
-    <div id="status" class="status">Tryck för att starta</div>
+    <div id="status" class="status">Klar att spela in</div>
 
-    <div id="originalTitle" class="section-title">Originalinspelning:</div>
+    <div id="originalTitle" class="section-title">Original (HQ):</div>
     <audio id="audioPlayer" controls style="display: none;"></audio>
     <a id="downloadLink" class="btn btn-success" href="#">Ladda ner original</a>
 
@@ -81,7 +86,7 @@
 
     <div id="reversedTitle" class="section-title">Baklänges:</div>
     <audio id="reversedPlayer" controls style="display: none;"></audio>
-    <a id="downloadReversed" class="btn btn-success" href="#">Ladda ner baklänges</a>
+    <a id="downloadReversed" class="btn btn-success" href="#">Ladda ner baklänges (.wav)</a>
 </div>
 
 <script>
@@ -98,17 +103,9 @@
     const reverseBtn = document.getElementById('reverseBtn');
     const reversedPlayer = document.getElementById('reversedPlayer');
     const downloadReversed = document.getElementById('downloadReversed');
-    
-    // UI Element för att visa/dölja
     const originalTitle = document.getElementById('originalTitle');
     const reversedTitle = document.getElementById('reversedTitle');
     const divider = document.getElementById('divider');
-
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        statusText.innerText = "Din webbläsare stöder inte ljudinspelning.";
-        statusText.style.color = "var(--accent)";
-        recordBtn.style.display = "none";
-    }
 
     recordBtn.addEventListener('click', async () => {
         if (!isRecording) {
@@ -120,20 +117,32 @@
 
     async function startRecording() {
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            mediaRecorder = new MediaRecorder(stream);
+            // FÖRBÄTTRING 1: Stäng av mjukvarufilter för renare rå-ljud
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                audio: {
+                    echoCancellation: false,
+                    noiseSuppression: false,
+                    autoGainControl: false,
+                    sampleRate: 44100
+                } 
+            });
+
+            // FÖRBÄTTRING 2: Ställ in hög bitrate (256kbps)
+            const options = {
+                audioBitsPerSecond: 256000
+            };
+            
+            mediaRecorder = new MediaRecorder(stream, options);
             
             mediaRecorder.start();
             isRecording = true;
             audioChunks = [];
 
-            // UI
             recordBtn.classList.add('recording');
-            statusText.innerText = "Spelar in... (tryck igen för att stoppa)";
+            statusText.innerText = "Spelar in i hög kvalitet...";
             statusText.style.color = "var(--accent)";
             btnIcon.setAttribute('d', 'M6 6h12v12H6z');
 
-            // Göm gamla spelare vid ny inspelning
             audioPlayer.style.display = "none";
             downloadLink.style.display = "none";
             reverseBtn.style.display = "none";
@@ -156,9 +165,8 @@
                 
                 const extension = mediaRecorder.mimeType.includes("mp4") ? "mp4" : "webm";
                 downloadLink.href = audioUrl;
-                downloadLink.download = `inspelning-${new Date().getTime()}.${extension}`;
+                downloadLink.download = `hq-inspelning.${extension}`;
                 
-                // Visa knappar
                 downloadLink.style.display = "block";
                 reverseBtn.style.display = "block";
                 originalTitle.style.display = "block";
@@ -168,8 +176,7 @@
             });
 
         } catch (err) {
-            console.error("Fel vid inspelning:", err);
-            statusText.innerText = "Åtkomst till mikrofon nekad.";
+            statusText.innerText = "Mikrofonfel! Kolla inställningar.";
             statusText.style.color = "var(--accent)";
         }
     }
@@ -179,54 +186,45 @@
             mediaRecorder.stop();
             isRecording = false;
             recordBtn.classList.remove('recording');
-            statusText.innerText = "Inspelning sparad!";
+            statusText.innerText = "Inspelning klar!";
             statusText.style.color = "var(--success)";
             btnIcon.setAttribute('d', 'M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5-3c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z');
         }
     }
 
-    // --- BAKLÄNGESFUNKTIONEN --- //
     async function processReverseAudio() {
         if (!currentAudioBlob) return;
-        
-        reverseBtn.innerText = "Bearbetar ljudet... ⏳";
+        reverseBtn.innerText = "Vänder på vågformerna... ⏳";
         reverseBtn.disabled = true;
 
         try {
-            // Skapa en AudioContext för att bearbeta ljudet
-            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 44100 });
             const arrayBuffer = await currentAudioBlob.arrayBuffer();
             const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
 
-            // Vänd ljudet baklänges (reversera datan i alla kanaler)
             for (let i = 0; i < audioBuffer.numberOfChannels; i++) {
                 Array.prototype.reverse.call(audioBuffer.getChannelData(i));
             }
 
-            // Bygg om ljudet till en .wav-fil för nedladdning
             const wavBlob = audioBufferToWavBlob(audioBuffer);
             const reversedUrl = URL.createObjectURL(wavBlob);
 
-            // Uppdatera gränssnittet
             reversedPlayer.src = reversedUrl;
             reversedPlayer.style.display = "block";
-            
             downloadReversed.href = reversedUrl;
-            downloadReversed.download = `baklanges-${new Date().getTime()}.wav`;
+            downloadReversed.download = `baklanges-hq.wav`;
             downloadReversed.style.display = "block";
             reversedTitle.style.display = "block";
-
-            reverseBtn.style.display = "none"; // Göm knappen när det är klart
+            reverseBtn.style.display = "none";
 
         } catch (e) {
-            console.error(e);
-            reverseBtn.innerText = "Ett fel uppstod!";
+            reverseBtn.innerText = "Kunde inte bearbeta ljudet.";
         } finally {
             reverseBtn.disabled = false;
         }
     }
 
-    // Hjälpfunktion för att konvertera raw audio data till en .wav fil
+    // Export till 16-bit WAV för maximal kompatibilitet och kvalitet
     function audioBufferToWavBlob(buffer) {
         const numOfChan = buffer.numberOfChannels,
             length = buffer.length * numOfChan * 2 + 44,
@@ -234,48 +232,30 @@
             view = new DataView(bufferData),
             channels = [],
             sampleRate = buffer.sampleRate;
-        let offset = 0,
-            pos = 0;
+        let offset = 0, pos = 0;
 
-        function setUint16(data) { view.setUint16(offset, data, true); offset += 2; }
-        function setUint32(data) { view.setUint32(offset, data, true); offset += 4; }
+        const setUint16 = (d) => { view.setUint16(offset, d, true); offset += 2; };
+        const setUint32 = (d) => { view.setUint32(offset, d, true); offset += 4; };
 
-        setUint32(0x46464952); // "RIFF"
-        setUint32(length - 8); 
-        setUint32(0x45564157); // "WAVE"
+        setUint32(0x46464952); setUint32(length - 8); setUint32(0x45564157);
+        setUint32(0x20746d66); setUint32(16); setUint16(1); setUint16(numOfChan);
+        setUint32(sampleRate); setUint32(sampleRate * 2 * numOfChan); setUint16(numOfChan * 2); setUint16(16);
+        setUint32(0x61746164); setUint32(length - offset - 4);
 
-        setUint32(0x20746d66); // "fmt " chunk
-        setUint32(16); 
-        setUint16(1); 
-        setUint16(numOfChan);
-        setUint32(sampleRate);
-        setUint32(sampleRate * 2 * numOfChan); 
-        setUint16(numOfChan * 2); 
-        setUint16(16); 
-
-        setUint32(0x61746164); // "data" chunk
-        setUint32(length - pos - 4); 
-
-        for(let i = 0; i < buffer.numberOfChannels; i++) {
-            channels.push(buffer.getChannelData(i));
-        }
-
+        for(let i = 0; i < numOfChan; i++) channels.push(buffer.getChannelData(i));
         while(pos < buffer.length) {
             for(let i = 0; i < numOfChan; i++) {
-                let sample = Math.max(-1, Math.min(1, channels[i][pos]));
-                sample = (0.5 + sample < 0 ? sample * 32768 : sample * 32767)|0;
-                view.setInt16(offset, sample, true);
+                let s = Math.max(-1, Math.min(1, channels[i][pos]));
+                view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
                 offset += 2;
             }
             pos++;
         }
-
         return new Blob([bufferData], { type: "audio/wav" });
     }
 
-    // PWA Service Worker
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js').catch(err => console.log(err));
+        navigator.serviceWorker.register('sw.js').catch(() => {});
     }
 </script>
 </body>
